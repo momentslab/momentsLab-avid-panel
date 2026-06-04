@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ML Avid Extension – Releases</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #c9d1d9;
+      --text-muted: #8b949e;
+      --accent: #58a6ff;
+      --accent-hover: #79b8ff;
+      --tag-bg: #1f6feb33;
+      --tag-border: #1f6feb;
+      --green: #3fb950;
+      --radius: 8px;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 24px 0;
+      background: var(--surface);
+    }
+
+    header .inner {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    header img {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-top: 2px;
+    }
+
+    main {
+      max-width: 860px;
+      margin: 32px auto;
+      padding: 0 24px;
+    }
+
+    .releases-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .releases-header h2 {
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    #release-count {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* ── release card ─────────────────────────────────────────── */
+    .release-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 24px;
+      margin-bottom: 16px;
+      transition: border-color 0.2s;
+    }
+    .release-card:hover { border-color: var(--accent); }
+
+    /* ── latest hero card ─────────────────────────────────────── */
+    .release-card--latest {
+      border-color: var(--green);
+      background: #0d1f14;
+      padding: 28px;
+      margin-bottom: 32px;
+    }
+    .release-card--latest:hover { border-color: #56d364; }
+
+    .latest-eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--green);
+      margin-bottom: 10px;
+    }
+    .latest-eyebrow::before {
+      content: "";
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+    }
+
+    .release-version-pill {
+      display: inline-block;
+      font-size: 1.6rem;
+      font-weight: 700;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+    .release-card--latest .release-name {
+      font-size: 1rem;
+      font-weight: 400;
+      color: var(--text-muted);
+    }
+
+    /* ── previous releases toggle ─────────────────────────────── */
+    .prev-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 10px 0;
+      margin-bottom: 12px;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .prev-toggle:hover { color: var(--text); }
+    .prev-toggle-arrow {
+      transition: transform 0.2s;
+      font-style: normal;
+      font-size: 0.75rem;
+    }
+    .prev-toggle.open .prev-toggle-arrow { transform: rotate(90deg); }
+
+    #prev-releases { display: none; }
+    #prev-releases.open { display: block; }
+
+    /* ── shared card internals ────────────────────────────────── */
+    .release-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .release-name {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .release-name:hover { color: var(--accent-hover); text-decoration: underline; }
+
+    .badges { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+
+    .badge {
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 12px;
+      border: 1px solid;
+    }
+    .badge-pre   { color: #d29922; border-color: #d29922; background: #d2992222; }
+    .badge-draft { color: var(--text-muted); border-color: var(--border); background: transparent; }
+
+    .release-tag {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-family: "SFMono-Regular", Consolas, monospace;
+    }
+
+    .release-meta {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .release-body {
+      font-size: 0.9rem;
+      color: var(--text);
+      border-left: 3px solid var(--border);
+      padding-left: 12px;
+      margin: 12px 0;
+      white-space: pre-wrap;
+      max-height: 200px;
+      overflow: hidden;
+      position: relative;
+      transition: max-height 0.3s ease;
+    }
+    .release-body.expanded { max-height: 2000px; }
+    .release-body::after {
+      content: "";
+      display: block;
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 48px;
+      background: linear-gradient(transparent, var(--surface));
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .release-card--latest .release-body::after {
+      background: linear-gradient(transparent, #0d1f14);
+    }
+    .release-body.expanded::after { opacity: 0; }
+
+    .expand-btn {
+      background: none;
+      border: none;
+      color: var(--accent);
+      cursor: pointer;
+      font-size: 0.82rem;
+      padding: 0;
+      margin-bottom: 12px;
+    }
+    .expand-btn:hover { text-decoration: underline; }
+
+    /* ── downloads section ──────────────────────────────────────── */
+    .downloads-section {
+      margin-top: 16px;
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
+    }
+
+    .downloads-title {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 12px;
+    }
+
+    .platform-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 560px) { .platform-columns { grid-template-columns: 1fr; } }
+
+    .platform-col {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg);
+      padding: 14px;
+    }
+    .platform-col.unavailable { opacity: 0.45; }
+
+    .platform-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .platform-logo { font-size: 1.4rem; }
+    .platform-label {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    /* primary download button */
+    .btn-download {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--accent);
+      background: var(--tag-bg);
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 600;
+      transition: background 0.2s, color 0.2s;
+      margin-bottom: 8px;
+    }
+    .btn-download:hover { background: #1f6feb55; color: var(--accent-hover); }
+    .btn-download-left { display: flex; align-items: center; gap: 6px; min-width: 0; }
+    .btn-download-left span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .btn-download-size {
+      font-size: 0.75rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* secondary (extra) files */
+    .extra-assets { display: flex; flex-direction: column; gap: 4px; }
+    .asset-link-small {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 8px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      text-decoration: none;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      background: transparent;
+      transition: border-color 0.2s, color 0.2s;
+      overflow: hidden;
+    }
+    .asset-link-small:hover { border-color: var(--accent); color: var(--accent); }
+    .asset-link-small .al-name {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .asset-link-small .al-size { white-space: nowrap; }
+
+    .no-asset-msg {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* ── state screens ──────────────────────────────────────────── */
+    .state-box {
+      text-align: center;
+      padding: 60px 24px;
+      color: var(--text-muted);
+    }
+    .state-box .icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .state-box p { font-size: 0.95rem; }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    footer {
+      text-align: center;
+      padding: 40px 24px;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      border-top: 1px solid var(--border);
+      margin-top: 40px;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="inner">
+    <img src="images/ml.png" alt="ML Avid Extension logo" onerror="this.style.display='none'" />
+    <div>
+      <h1>ML Avid Extension</h1>
+      <p>Desktop Helper app for MomentsLab Avid MediaComposer extension</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="releases-header">
+    <h2>📦 Releases</h2>
+    <span id="release-count"></span>
+  </div>
+
+  <div id="releases-container">
+    <div class="state-box"><div class="spinner"></div><p>Loading releases…</p></div>
+  </div>
+
+  <!-- older releases injected here by JS -->
+  <div id="prev-section" style="display:none">
+    <div class="prev-toggle" id="prev-toggle" onclick="togglePrev()">
+      <i class="prev-toggle-arrow">▶</i>
+      <span id="prev-toggle-label">Previous releases</span>
+    </div>
+    <div id="prev-releases"></div>
+  </div>
+</main>
+
+<footer>
+  <p>
+    Data fetched live from
+    <a href="https://github.com/momentslab/avid-panel-miniapp/releases" target="_blank" rel="noopener">
+      github.com/momentslab/avid-panel-miniapp
+    </a>
+    &nbsp;·&nbsp;
+    <a href="https://github.com/momentslab/avid-panel-miniapp" target="_blank" rel="noopener">View source</a>
+  </p>
+</footer>
+
+<script>
+  const OWNER = 'momentslab';
+  const REPO  = 'avid-panel-miniapp';
+  // releases.json is pre-fetched at deploy time by the GitHub Actions workflow
+  // (the repo is private so the live API is not accessible from the browser).
+  const API   = 'releases.json';
+
+  // ── helpers ────────────────────────────────────────────────────
+  function formatBytes(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024, sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  }
+
+  function timeAgo(dateStr) {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60)  return `${mins} minute${mins !== 1 ? 's' : ''} ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs  < 24)  return `${hrs} hour${hrs !== 1 ? 's' : ''} ago`;
+    const days = Math.floor(hrs / 24);
+    if (days < 30)  return `${days} day${days !== 1 ? 's' : ''} ago`;
+    return new Date(dateStr).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // ── asset classification ───────────────────────────────────────
+  // Returns 'darwin' | 'win32' | 'other'
+  function assetPlatform(name) {
+    const n = name.toLowerCase();
+    if (n.includes('darwin') || n.includes('macos') || n.endsWith('.dmg')) return 'darwin';
+    if (n.includes('win32') || n.includes('windows') || n.endsWith('.exe') || n.endsWith('.msi')) return 'win32';
+    return 'other';
+  }
+
+  // Primary installer preference order per platform
+  const PRIMARY_EXT = { darwin: ['.dmg', '.zip'], win32: ['.exe', '.msi'] };
+
+  function splitAssets(assets) {
+    const mac   = assets.filter(a => assetPlatform(a.name) === 'darwin');
+    const win   = assets.filter(a => assetPlatform(a.name) === 'win32');
+    const other = assets.filter(a => assetPlatform(a.name) === 'other');
+
+    function pickPrimary(list, platform) {
+      for (const ext of PRIMARY_EXT[platform]) {
+        const found = list.find(a => a.name.toLowerCase().endsWith(ext));
+        if (found) return found;
+      }
+      return list[0] || null;
+    }
+
+    const macPrimary = pickPrimary(mac, 'darwin');
+    const winPrimary = pickPrimary(win, 'win32');
+
+    return {
+      macPrimary,
+      macExtra:  mac.filter(a => a !== macPrimary),
+      winPrimary,
+      winExtra:  win.filter(a => a !== winPrimary),
+      other,
+    };
+  }
+
+  // ── render helpers ─────────────────────────────────────────────
+  function renderPrimaryBtn(asset) {
+    if (!asset) return '<p class="no-asset-msg">Not available for this release.</p>';
+    const ext  = asset.name.split('.').pop().toUpperCase();
+    return `
+      <a class="btn-download" href="${asset.browser_download_url}" title="${escapeHtml(asset.name)}">
+        <span class="btn-download-left">
+          <span>⬇ Download .${ext}</span>
+        </span>
+        <span class="btn-download-size">${formatBytes(asset.size)}</span>
+      </a>`;
+  }
+
+  function renderExtraLinks(extras) {
+    if (!extras.length) return '';
+    return `<div class="extra-assets">
+      ${extras.map(a => `
+        <a class="asset-link-small" href="${a.browser_download_url}" title="${escapeHtml(a.name)}">
+          <span class="al-name">${escapeHtml(a.name)}</span>
+          <span class="al-size">${formatBytes(a.size)}</span>
+        </a>`).join('')}
+    </div>`;
+  }
+
+  function renderDownloads(assets) {
+    if (!assets.length) {
+      return `<div class="downloads-section">
+        <p style="color:var(--text-muted);font-size:0.85rem;">No binary assets attached to this release.</p>
+      </div>`;
+    }
+
+    const { macPrimary, macExtra, winPrimary, winExtra, other } = splitAssets(assets);
+
+    const otherLinks = other.length
+      ? `<div style="margin-top:10px;">
+           <div class="downloads-title" style="margin-bottom:6px;">Other files</div>
+           <div class="extra-assets">
+             ${other.map(a => `
+               <a class="asset-link-small" href="${a.browser_download_url}" title="${escapeHtml(a.name)}">
+                 <span class="al-name">${escapeHtml(a.name)}</span>
+                 <span class="al-size">${formatBytes(a.size)}</span>
+               </a>`).join('')}
+           </div>
+         </div>`
+      : '';
+
+    return `
+      <div class="downloads-section">
+        <div class="downloads-title">Download</div>
+        <div class="platform-columns">
+
+          <div class="platform-col${macPrimary ? '' : ' unavailable'}">
+            <div class="platform-header">
+              <span class="platform-logo"></span>
+              <span class="platform-label">macOS</span>
+            </div>
+            ${renderPrimaryBtn(macPrimary)}
+            ${renderExtraLinks(macExtra)}
+          </div>
+
+          <div class="platform-col${winPrimary ? '' : ' unavailable'}">
+            <div class="platform-header">
+              <span class="platform-logo">🪟</span>
+              <span class="platform-label">Windows</span>
+            </div>
+            ${renderPrimaryBtn(winPrimary)}
+            ${renderExtraLinks(winExtra)}
+          </div>
+
+        </div>
+        ${otherLinks}
+      </div>`;
+  }
+
+  // ── release card ───────────────────────────────────────────────
+  function renderRelease(release, isLatest) {
+    const date = release.published_at || release.created_at;
+
+    const badgeHtml = [
+      release.prerelease ? '<span class="badge badge-pre">Pre-release</span>' : '',
+      release.draft      ? '<span class="badge badge-draft">Draft</span>' : '',
+    ].join('');
+
+    const bodyHtml = release.body
+      ? `<div class="release-body" id="body-${release.id}">${escapeHtml(release.body)}</div>
+         <button class="expand-btn" onclick="toggleBody(${release.id})">Show more ▾</button>`
+      : '';
+
+    if (isLatest) {
+      return `
+        <div class="release-card release-card--latest">
+          <div class="latest-eyebrow">Latest release</div>
+          <div class="release-version-pill">${escapeHtml(release.tag_name)}</div>
+          <div style="margin-bottom:8px;">
+            <a class="release-name" href="${release.html_url}" target="_blank" rel="noopener">
+              ${escapeHtml(release.name || release.tag_name)}
+            </a>
+            ${badgeHtml}
+          </div>
+          <div class="release-meta">
+            Published ${timeAgo(date)}
+            ${release.author ? `by <strong>${escapeHtml(release.author.login)}</strong>` : ''}
+          </div>
+          ${bodyHtml}
+          ${renderDownloads(release.assets || [])}
+        </div>`;
+    }
+
+    return `
+      <div class="release-card">
+        <div class="release-top">
+          <div>
+            <a class="release-name" href="${release.html_url}" target="_blank" rel="noopener">
+              ${escapeHtml(release.name || release.tag_name)}
+            </a>
+            <span class="release-tag">&nbsp;${escapeHtml(release.tag_name)}</span>
+          </div>
+          <div class="badges">${badgeHtml}</div>
+        </div>
+        <div class="release-meta">
+          Published ${timeAgo(date)}
+          ${release.author ? `by <strong>${escapeHtml(release.author.login)}</strong>` : ''}
+        </div>
+        ${bodyHtml}
+        ${renderDownloads(release.assets || [])}
+      </div>`;
+  }
+
+  function toggleBody(id) {
+    const el = document.getElementById(`body-${id}`);
+    if (!el) return;
+    const btn = el.nextElementSibling;
+    el.classList.toggle('expanded');
+    btn.textContent = el.classList.contains('expanded') ? 'Show less ▴' : 'Show more ▾';
+  }
+  window.toggleBody = toggleBody;
+
+  function togglePrev() {
+    const toggle = document.getElementById('prev-toggle');
+    const list   = document.getElementById('prev-releases');
+    toggle.classList.toggle('open');
+    list.classList.toggle('open');
+  }
+  window.togglePrev = togglePrev;
+
+  // ── fetch ──────────────────────────────────────────────────────
+  async function loadReleases() {
+    const container  = document.getElementById('releases-container');
+    const prevSection = document.getElementById('prev-section');
+    const prevList   = document.getElementById('prev-releases');
+    const prevLabel  = document.getElementById('prev-toggle-label');
+
+    container.innerHTML = `<div class="state-box"><div class="spinner"></div><p>Loading releases…</p></div>`;
+    try {
+      const res = await fetch(API);
+      if (!res.ok) throw new Error(`GitHub API responded with ${res.status}`);
+      const releases = await res.json();
+
+      if (!releases.length) {
+        container.innerHTML = `<div class="state-box"><div class="icon">🔍</div><p>No releases found yet.</p></div>`;
+        return;
+      }
+
+      // The GitHub API returns releases newest-first.
+      // "latest" = first non-draft, non-prerelease entry.
+      const latestIdx = releases.findIndex(r => !r.draft && !r.prerelease);
+      const latest    = latestIdx !== -1 ? releases[latestIdx] : releases[0];
+      const older     = releases.filter(r => r !== latest);
+
+      document.getElementById('release-count').textContent =
+        `${releases.length} release${releases.length !== 1 ? 's' : ''}`;
+
+      container.innerHTML = renderRelease(latest, true);
+
+      if (older.length) {
+        prevLabel.textContent = `Previous releases (${older.length})`;
+        prevList.innerHTML    = older.map(r => renderRelease(r, false)).join('');
+        prevSection.style.display = '';
+      }
+    } catch (err) {
+      console.error(err);
+      container.innerHTML = `
+        <div class="state-box">
+          <div class="icon">⚠️</div>
+          <p>Could not load releases.<br><small>${escapeHtml(err.message)}</small></p>
+        </div>`;
+    }
+  }
+
+  loadReleases();
+</script>
+</body>
+</html>
+
