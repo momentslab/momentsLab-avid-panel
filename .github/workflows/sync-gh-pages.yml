@@ -26,7 +26,7 @@ jobs:
       #    JSON from momentsLab-avid-panel itself rather than the private origin.
       - name: Rebuild releases.json
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.GH_EXPLOIT_TOKEN }}
         run: |
           echo "Fetching all releases from ${{ github.repository }}…"
           mkdir -p docs
@@ -36,6 +36,8 @@ jobs:
 
       # ── 3. Commit and push if anything changed ───────────────────────────────
       - name: Commit and push changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_EXPLOIT_TOKEN }}
         run: |
           git config --global user.name  "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
