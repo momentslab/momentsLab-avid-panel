@@ -7,11 +7,6 @@ on:
   repository_dispatch:
     types: [sync-gh-pages]
   workflow_dispatch:
-    inputs:
-      source_repo:
-        description: 'Source repository (owner/repo)'
-        required: false
-        default: 'momentslab/avid-panel-miniapp'
 
 permissions:
   contents: write
@@ -26,45 +21,29 @@ jobs:
       - name: Checkout this repository
         uses: actions/checkout@v4
 
-      # ── 2. Checkout the source repo to get the latest docs/ ─────────────────
-      - name: Checkout source repository
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ github.event.client_payload.source_repo || inputs.source_repo || 'momentslab/avid-panel-miniapp' }}
-          token: ${{ secrets.GH_EXPLOIT_TOKEN }}
-          path: source-repo
-
-      # ── 3. Rebuild releases.json from this repo's own releases ─────────────
+      # ── 2. Rebuild releases.json from this repo's own releases ──────────────
       #    Releases are already mirrored here by sync-release, so we source the
       #    JSON from momentsLab-avid-panel itself rather than the private origin.
       - name: Rebuild releases.json
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_EXPLOIT_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           echo "Fetching all releases from ${{ github.repository }}…"
-          gh api "repos/${{ github.repository }}/releases?per_page=100" \
-            > source-repo/docs/releases.json
-          echo "releases.json updated ($(jq length source-repo/docs/releases.json) entries)"
-
-      # ── 4. Copy docs/ from source into this repo ────────────────────────────
-      - name: Copy docs/ into this repository
-        run: |
           mkdir -p docs
-          cp -r source-repo/docs/. docs/
-          echo "=== Updated docs/ contents ==="
-          ls -la docs/
+          gh api "repos/${{ github.repository }}/releases?per_page=100" \
+            > docs/releases.json
+          echo "releases.json updated ($(jq length docs/releases.json) entries)"
 
-      # ── 5. Commit and push if anything changed ───────────────────────────────
+      # ── 3. Commit and push if anything changed ───────────────────────────────
       - name: Commit and push changes
         run: |
           git config --global user.name  "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-          git add docs/
-          git diff --cached --quiet && echo "No changes to docs/ – skipping." && exit 0
+          git add docs/releases.json
+          git diff --cached --quiet && echo "No changes to releases.json – skipping." && exit 0
 
           SOURCE_SHA="${{ github.event.client_payload.head_sha }}"
-          git commit -m "chore: sync GitHub Pages from avid-panel-miniapp@${SOURCE_SHA:-manual}"
+          git commit -m "chore: sync releases.json from avid-panel-miniapp@${SOURCE_SHA:-manual}"
           git push
-          echo "✅ docs/ synced successfully"
-
+          echo "✅ releases.json synced successfully"
