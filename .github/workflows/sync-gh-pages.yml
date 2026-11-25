@@ -20,6 +20,10 @@ jobs:
       # ── 1. Checkout this repo (momentsLab-avid-panel) ───────────────────────
       - name: Checkout this repository
         uses: actions/checkout@v4
+        with:
+          # Persist GH_CUSTOM_TOKEN for `git push`. The default GITHUB_TOKEN acts
+          # as github-actions[bot], which is not on the main ruleset bypass list.
+          token: ${{ secrets.GH_CUSTOM_TOKEN }}
 
       # ── 2. Rebuild releases.json from this repo's own releases ──────────────
       #    Releases are already mirrored here by sync-release, so we source the
